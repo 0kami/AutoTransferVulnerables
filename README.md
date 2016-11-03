@@ -1,8 +1,8 @@
 # AutoTransferVulnerables
-通过有道API翻译securityfocus官网的漏洞，实现自动化翻译。
+通过有道API翻译[securityfocus](http://www.securityfocus.com/)官网的最新漏洞，实现自动化翻译。
 # usage
 复制一份Config.py.example到Config.py<br/>
-在有道翻译API上申请10个api账号（经测试10个比较稳定）<br/>
+在有道翻译API上申请10个api账号（经测试10个比较稳定）,写入Config.py<br/>
 -h查看使用方法<br/>
 python main.py -h
 # example

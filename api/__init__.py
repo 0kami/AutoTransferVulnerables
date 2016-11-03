@@ -5,5 +5,6 @@
 from FetchContents import *
 from OutputFile import *
 from FetchVuls import *
+from LogStatus import *
 from Transfer import *
 from Config import *

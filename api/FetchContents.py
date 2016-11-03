@@ -6,7 +6,7 @@ import requests,re,time,random
 
 from FetchVuls import FetchVulInSF
 from multiprocessing.pool import ThreadPool
-from Config import HTTP_PROXY,CVEDB,TIMEOUT
+from Config import *
 
 class FetchContentSF:
     '''
@@ -16,6 +16,7 @@ class FetchContentSF:
         self.vuls=vuls
         self.size=6
         self.proxy=proxy
+
     def setThreadSize(self,size):
         self.size=size
 
@@ -36,19 +37,18 @@ class FetchContentSF:
             exploit = self.fetchExploit(url)
             solution = self.fetchSolution(url)
             references=self.fetchReferences(url)
-            print "[+] ["+time.asctime(time.localtime(time.time()))+\
-                  "] fetch "+url+" details done"
+            LOG.pprint("+","fetch "+url+" details done",GREEN)
             return dict(dict(dict(dict(info, **discuss), **exploit), **solution),**references)
-        print "[-] ["+time.asctime(time.localtime(time.time()))+\
-              "] 已存在CVE漏洞库中 "+url+", 不载入，请人工确认"
+        LOG.pprint("-","已存在CVE漏洞库中 "+url+", 不载入，请人工确认",RED)
+
     def fetchInfo(self,url):
         url=url+"/info"
         while 1:
             r=self.get(url)
             if r!=None:
                 break
-            print "[-] ["+time.asctime(time.localtime(time.time()))+\
-                  "] http error, get " + url + " again"
+            LOG.pprint("-","http error, get " + url + " again",RED)
+
         pattern=re.compile(r'\s*<td>\s*<span class="label">([\s\S]+?):</span>\s*</td>\s*<td>\s*([\s\S]*?)\s*</td>')
         results=pattern.findall(r.content)
         res={}
@@ -73,8 +73,8 @@ class FetchContentSF:
             r = self.get(url)
             if r != None:
                 break
-            print "[-] [" + time.asctime(time.localtime(time.time())) + \
-                  "] http error, get " + url + " again"
+            LOG.pprint("-", "http error, get " + url + " again", RED)
+
         pattern=re.compile(
             r'<li><a href="([\s\S]+?)">')
         results=pattern.findall(r.content)
@@ -89,8 +89,7 @@ class FetchContentSF:
             r = self.get(url)
             if r != None:
                 break
-            print "[-] ["+time.asctime(time.localtime(time.time()))+\
-                  "] http error, get " + url + " again"
+            LOG.pprint("-", "http error, get " + url + " again", RED)
         pattern = re.compile(
             r'<div id="vulnerability">\s*<span class="title">([\s\S]*?)</span><br/><br/>\s*([\s\S]*?)\s*</div>')
         results = pattern.findall(r.content)[0]
@@ -105,8 +104,7 @@ class FetchContentSF:
             r = self.get(url)
             if r != None:
                 break
-            print "[-] [" + time.asctime(time.localtime(time.time())) + \
-                  "] http error, get " + url + " again"
+            LOG.pprint("-", "http error, get " + url + " again", RED)
 
         pattern = re.compile(
             r'<div id="vulnerability">\s*<span class="title">[\s\S]*?</span><br/><br/>\s*([\s\S]*?)\s*</div>')
@@ -122,8 +120,7 @@ class FetchContentSF:
             r = self.get(url)
             if r != None:
                 break
-            print "[-] [" + time.asctime(time.localtime(time.time())) + \
-                  "] http error, get " + url + " again"
+            LOG.pprint("-", "http error, get " + url + " again", RED)
 
         pattern = re.compile(
             r'<b>Solution:</b><br/>\s*([\s\S]*?)\s*</div>')

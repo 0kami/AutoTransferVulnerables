@@ -4,22 +4,18 @@
 
 
 from api import *
-import time
 import argparse
 
 
 
-def pprint(error,content):
-    print "[{error}] [{time}] {content}"\
-        .format(error=error,time=time.asctime(time.localtime(time.time())),content=content)
 def store(vuls):
     with open("./url.db",'a+') as f:
         for line in vuls:
             f.write(line+"\n")
 
 def run(res):
-    pprint("+", "start program...")
-    pprint("+", "fetching vul list...")
+    LOG.pprint("+", "start program...",GREEN)
+    LOG.pprint("+", "fetching vul list...",GREEN)
     sf = FetchVulInSF()
     vuls=[]
     if res.has_key('num'):
@@ -27,28 +23,28 @@ def run(res):
     elif res.has_key('date'):
         vuls=sf.fetch(res['date'], proxy=res['proxy'])
     store(vuls)#储存获取的最新的url
-    pprint("+", "fecthing vul details...")
+    LOG.pprint("+", "fecthing vul details...",GREEN)
     fc = FetchContentSF(vuls, proxy=res['proxy'])
     results = fc.fetch()
     results=[temp for temp in results if temp!=None]
     if results==[]:
-        pprint("+", "nothing to transfer...")
-        pprint("+", "done")
+        LOG.pprint("+", "nothing to transfer...",GREEN)
+        LOG.pprint("+", "done",GREEN)
         sys.exit(0)
     # print results
-    pprint("+", "start transfer...")
+    LOG.pprint("+", "start transfer...",GREEN)
     tv = TransferVuls(results)
     res = tv.dealWithSF()
     # print res
-    pprint("+", "transfer done...")
-    pprint("+", "output file to " + VULDB)
+    LOG.pprint("+", "transfer done...",GREEN)
+    LOG.pprint("+", "output file to " + VULDB,GREEN)
     oftt=OutputFileToTxt(res)
     oftt.output()
-    pprint("+", "log CVE db done...")
-    pprint("+", "output vul excel...")
+    LOG.pprint("+", "log CVE db done...",GREEN)
+    LOG.pprint("+", "output vul excel...",GREEN)
     test = OutputFileToExcel(results, 'http://securityfocus.com')
     test.output()
-    pprint("+", "done")
+    LOG.pprint("+", "done",GREEN)
 if __name__=='__main__':
     import sys
     reload(sys)

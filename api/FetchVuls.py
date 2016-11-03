@@ -3,7 +3,7 @@
 # __author__ = 'gmfork'
 
 import requests,re,time
-from Config import HTTP_PROXY,HEADERS,TIMEOUT,ROOT
+from Config import *
 
 
 class FetchVulInSF:
@@ -94,8 +94,9 @@ class FetchVulInSF:
         while 1:
             temp = self.query(t,date=date,proxy=proxy)
             num+=len(temp)
-            print "[+] ["+time.asctime(time.localtime(time.time()))+"] " \
-                    "Total fecth "+str(num)
+
+            LOG.pprint("+","Total fecth "+str(num),GREEN)
+
             if self.flag:
                 res.extend(temp)
                 break
@@ -110,13 +111,11 @@ class FetchVulInSF:
             num=len(temp)
             if num > lines:
                 res.extend(temp[:lines])
-                print "[+] [" + time.asctime(time.localtime(time.time())) + "] " \
-                            "Total fecth " + str(lines)
+                LOG.pprint("+", "Total fecth " + str(lines), GREEN)
                 return res
             elif num==lines:#获取了足够的url
                 res.extend(temp)
-                print "[+] [" + time.asctime(time.localtime(time.time())) + "] " \
-                            "Total fecth " + str(lines)
+                LOG.pprint("+", "Total fecth " + str(lines), GREEN)
                 return res
             else:
                 start+=100
@@ -193,8 +192,7 @@ class FetchVulInSB:#
         while 1:
             temp = self.query(t, date=date, proxy=proxy)
             num += len(temp)
-            print "[+] [" + time.asctime(time.localtime(time.time())) + "] " \
-                        "Total fecth " + str(num)
+            LOG.pprint("+", "Total fecth " + str(num), GREEN)
             if self.flag:
                 res.extend(temp)
                 break
@@ -210,13 +208,11 @@ class FetchVulInSB:#
             num = len(temp)
             if num > lines:
                 res.extend(temp[:lines])
-                print "[+] [" + time.asctime(time.localtime(time.time())) + "] " \
-                        "Total fecth " + str(lines)
+                LOG.pprint("+", "Total fecth " + str(lines), GREEN)
                 return res
             elif num == lines:  # 获取了足够的url
                 res.extend(temp)
-                print "[+] [" + time.asctime(time.localtime(time.time())) + "] " \
-                        "Total fecth " + str(lines)
+                LOG.pprint("+", "Total fecth " + str(lines), GREEN)
                 return res
             else:
                 start += 100
