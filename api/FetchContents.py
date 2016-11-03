@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # __author__ = 'gmfork'
 
-import requests,re,time,random
+import re,time,random
 
 from FetchVuls import FetchVulInSF
 from multiprocessing.pool import ThreadPool
@@ -28,7 +28,6 @@ class FetchContentSF:
         return res
 
     def fetchALL(self,url):
-        # print vuls
 
         info = self.fetchInfo(url)
         info['url']=url
@@ -43,11 +42,7 @@ class FetchContentSF:
 
     def fetchInfo(self,url):
         url=url+"/info"
-        while 1:
-            r=self.get(url)
-            if r!=None:
-                break
-            LOG.pprint("-","http error, get " + url + " again",RED)
+        r = HTTPCONTAINER.get(url, self.proxy)
 
         pattern=re.compile(r'\s*<td>\s*<span class="label">([\s\S]+?):</span>\s*</td>\s*<td>\s*([\s\S]*?)\s*</td>')
         results=pattern.findall(r.content)
@@ -69,11 +64,7 @@ class FetchContentSF:
 
     def fetchReferences(self,url):
         url+="/references"
-        while 1:
-            r = self.get(url)
-            if r != None:
-                break
-            LOG.pprint("-", "http error, get " + url + " again", RED)
+        r = HTTPCONTAINER.get(url, self.proxy)
 
         pattern=re.compile(
             r'<li><a href="([\s\S]+?)">')
@@ -85,11 +76,7 @@ class FetchContentSF:
 
     def fetchDiscussion(self,url):
         url=url+"/discuss"
-        while 1:
-            r = self.get(url)
-            if r != None:
-                break
-            LOG.pprint("-", "http error, get " + url + " again", RED)
+        r = HTTPCONTAINER.get(url, self.proxy)
         pattern = re.compile(
             r'<div id="vulnerability">\s*<span class="title">([\s\S]*?)</span><br/><br/>\s*([\s\S]*?)\s*</div>')
         results = pattern.findall(r.content)[0]
@@ -100,11 +87,7 @@ class FetchContentSF:
 
     def fetchExploit(self,url):
         url=url+"/exploit"
-        while 1:
-            r = self.get(url)
-            if r != None:
-                break
-            LOG.pprint("-", "http error, get " + url + " again", RED)
+        r = HTTPCONTAINER.get(url, self.proxy)
 
         pattern = re.compile(
             r'<div id="vulnerability">\s*<span class="title">[\s\S]*?</span><br/><br/>\s*([\s\S]*?)\s*</div>')
@@ -116,11 +99,7 @@ class FetchContentSF:
 
     def fetchSolution(self,url):
         url=url+"/solution"
-        while 1:
-            r = self.get(url)
-            if r != None:
-                break
-            LOG.pprint("-", "http error, get " + url + " again", RED)
+        r = HTTPCONTAINER.get(url, self.proxy)
 
         pattern = re.compile(
             r'<b>Solution:</b><br/>\s*([\s\S]*?)\s*</div>')
@@ -128,21 +107,6 @@ class FetchContentSF:
         temp = res[0].replace('<br/>', '')
         temp = ' '.join(temp.split())
         return {"solution":temp}
-
-
-    def get(self,url):
-        try:
-            if self.proxy:
-                proxyDict = {
-                    "http": HTTP_PROXY,
-                    "https": HTTP_PROXY
-                }
-                r = requests.get(url, proxies=proxyDict,timeout=TIMEOUT)
-            else:
-                r = requests.get(url,timeout=TIMEOUT)
-            return r
-        except:
-            return None
 
 if __name__=='__main__':
 

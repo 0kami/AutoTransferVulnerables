@@ -3,7 +3,7 @@
 # __author__ = 'gmfork'
 
 import requests,json,random,re
-from Config import KEY,KEYFROM
+from Config import *
 from multiprocessing.pool import ThreadPool
 
 
@@ -44,7 +44,7 @@ class TransferByYouDao:
         self.getRandomKEY()
         url = self.apiurl.format(query=query)
         try:
-            r = requests.get(url)
+            r = HTTPCONTAINER.get(url)
             if 'openapi' in r.content:
                 return self.transfer(query)
             else:
@@ -69,7 +69,7 @@ class TransferByYouDao:
 
     def apitest(self,query):
         url=self.apiurl.format(query=query)
-        r=requests.get(url)
+        r=HTTPCONTAINER.get(url)
         data=json.loads(r.content)
         errorCode=data['errorCode']
         if errorCode==0:

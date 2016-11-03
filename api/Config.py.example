@@ -5,6 +5,7 @@
 # __author__ = 'gmfork'
 
 import os
+from LogStatus import LogStatus
 
 KEY={0:keyid1,1:keyid2,
      2:keyid3,3:keyid4,
@@ -17,7 +18,10 @@ KEYFROM={0:"keyfromname1",1:"keyfromname2",
          6:"keyfromname7",7:"keyfromname8",
          8:"keyfromname9",9:"keyfromname0"}
 
+LOG=LogStatus()
 
+RED=31
+GREEN=32
 
 ROOT=os.getcwd()
 

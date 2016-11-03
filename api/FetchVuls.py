@@ -49,13 +49,7 @@ class FetchVulInSF:
         vuls=[]
 
         try:
-            if proxy:
-                proxyDict = {
-                    "http": HTTP_PROXY,
-                }
-                r=requests.get(url,headers=HEADERS,proxies=proxyDict,timeout=TIMEOUT)
-            else:
-                r = requests.get(url,headers=HEADERS,timeout=TIMEOUT)
+            r=HTTPCONTAINER.get(url,proxy)
             pattern = re.compile(
                 r'<a href="/bid/[0-9]+"><span class="headline">([\s\S]+?)</span></a><br/>\s*<span class="date">([0-9]{4}-[0-9]{2}-[0-9]{2})</span><br/>\s*<a href="/bid/[0-9]+">([\s\S]+?)</a><br/><br/>')
             results = pattern.findall(r.content)
@@ -138,7 +132,7 @@ class FetchVulInSB:#
                 if not buf:
                     break
                 self.oldurl.append(buf)
-    def query(self,offset=35,date="",proxy=False):
+    def query(self,offset=0,date="",proxy=False,max=0):
         if date == "":
             date = time.strftime("%Y-%m-%d")
         elif date == "null":
@@ -146,28 +140,31 @@ class FetchVulInSB:#
         vuls=[]
         url=self.apiurl.format(offset=offset)
         try:
-            if proxy:
-                proxyDict = {
-                    "http": HTTP_PROXY,
-                }
-                r = requests.get(url, headers=HEADERS, proxies=proxyDict, timeout=TIMEOUT)
-            else:
-                r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+            r = HTTPCONTAINER.get(url, proxy)
+            # print r.content
             pattern = re.compile(
-                r'<a href="(render.html?it=[0-9]{0,6})" class="genlink"><b>[\s\S]+?<span class="nodetext">\(([\s\S]+?)\)</span>')
+                r'<a href="(\./render.html\?it=[0-9]{0,6})" class="genlink"><b>[\s\S]+?\s*\-\s*<span class="nodetext">\(([\s\S]+?)\)</span>')
             results = pattern.findall(r.content)
+            t=0
             for result in results:
                 # print result
-                if result[0] in self.oldurl:
+                temp_url=result[0].replace('./',"https://www.auscert.org.au/")
+                if temp_url in self.oldurl:
                     continue
                 if date != "":
-                    if time.strptime(result[1], "%d/%m/%Y") >= time.strptime(date, "%Y-%m-%d"):
-                        vuls.append(result[0])
+                    if time.strptime(result[1], "%d/%m/%Y") >= time.strptime(date, "%Y-%m-%d") and self.checkAccessible(temp_url,proxy=proxy):
+                        vuls.append(temp_url)
                     else:
                         self.flag = True
                 else:
-                    vuls.append(result[0])
-
+                    if self.checkAccessible(temp_url, proxy=proxy):
+                        vuls.append(temp_url)
+                    else:
+                        continue
+                    if t==max:
+                        return vuls
+                    else:
+                        t+=1
             return vuls
         except:
             print "获取securityfocus漏洞列表出错"
@@ -204,7 +201,7 @@ class FetchVulInSB:#
         start = 0
         res = []
         while 1:
-            temp = self.query( offset=35, date="null", proxy=proxy)
+            temp = self.query( offset=start, date="null", proxy=proxy,max=lines)
             num = len(temp)
             if num > lines:
                 res.extend(temp[:lines])
@@ -215,9 +212,16 @@ class FetchVulInSB:#
                 LOG.pprint("+", "Total fecth " + str(lines), GREEN)
                 return res
             else:
-                start += 100
+                start += 35
                 lines -= num
                 res.extend(temp)
+
+    def checkAccessible(self,url,proxy=False):
+        r=HTTPCONTAINER.get(url,proxy)
+        if "authorised" in r.content:
+            return False
+        else:
+            return True
 
 if __name__=='__main__':
     # sf=FetchVulInSF()
@@ -226,6 +230,6 @@ if __name__=='__main__':
     # print temp
     # print len(temp)
     sb=FetchVulInSB()
-    temp=sb.fetch("2016-11-03")
+    temp=sb.fetchLine(10)
     print temp
     print len(temp)

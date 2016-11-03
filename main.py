@@ -13,6 +13,8 @@ def store(vuls):
         for line in vuls:
             f.write(line+"\n")
 
+
+
 def run(res):
     LOG.pprint("+", "start program...",GREEN)
     LOG.pprint("+", "fetching vul list...",GREEN)
