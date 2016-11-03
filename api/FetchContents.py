@@ -32,15 +32,15 @@ class FetchContentSF:
         info = self.fetchInfo(url)
         info['url']=url
         if info.has_key('CVE') and info['CVE'] not in CVEDB:
-            discuss = self.fetchDiscussion(url)
-            exploit = self.fetchExploit(url)
-            solution = self.fetchSolution(url)
-            references=self.fetchReferences(url)
+            discuss = self._fetchDiscussion(url)
+            exploit = self._fetchExploit(url)
+            solution = self._fetchSolution(url)
+            references=self._fetchReferences(url)
             LOG.pprint("+","fetch "+url+" details done",GREEN)
             return dict(dict(dict(dict(info, **discuss), **exploit), **solution),**references)
         LOG.pprint("-","已存在CVE漏洞库中 "+url+", 不载入，请人工确认",RED)
 
-    def fetchInfo(self,url):
+    def _fetchInfo(self,url):
         url=url+"/info"
         r = HTTPCONTAINER.get(url, self.proxy)
 
@@ -62,7 +62,7 @@ class FetchContentSF:
                 res[line[0]]=re.sub('<[^<]+?>', '', line[1])
         return res
 
-    def fetchReferences(self,url):
+    def _fetchReferences(self,url):
         url+="/references"
         r = HTTPCONTAINER.get(url, self.proxy)
 
@@ -74,7 +74,7 @@ class FetchContentSF:
         # print res
         return {'references':"\n".join(res)}
 
-    def fetchDiscussion(self,url):
+    def _fetchDiscussion(self,url):
         url=url+"/discuss"
         r = HTTPCONTAINER.get(url, self.proxy)
         pattern = re.compile(
@@ -85,7 +85,7 @@ class FetchContentSF:
         return {"title":results[0],
                 "discuss":temp}
 
-    def fetchExploit(self,url):
+    def _fetchExploit(self,url):
         url=url+"/exploit"
         r = HTTPCONTAINER.get(url, self.proxy)
 
@@ -96,8 +96,7 @@ class FetchContentSF:
         temp = ' '.join(temp.split())
         return {"exploit":temp}
 
-
-    def fetchSolution(self,url):
+    def _fetchSolution(self,url):
         url=url+"/solution"
         r = HTTPCONTAINER.get(url, self.proxy)
 
@@ -107,6 +106,29 @@ class FetchContentSF:
         temp = res[0].replace('<br/>', '')
         temp = ' '.join(temp.split())
         return {"solution":temp}
+
+class FetchContentSB:
+    def __init__(self,vuls,proxy):
+        self.vuls = vuls
+        self.size = 6
+        self.proxy = proxy
+
+    def fetch(self):
+        try:
+            pool=ThreadPool(self.size)
+            res=pool.map(self.fetchALL,self.vuls)
+            pool.close()
+            pool.join()
+            return res
+        except:
+            print '=== STEP ERROR INFO START'
+            import traceback
+            traceback.print_exc()
+            print '=== STEP ERROR INFO END'
+            return []
+
+    def fetchALL(self,url):
+        pass
 
 if __name__=='__main__':
 

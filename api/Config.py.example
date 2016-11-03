@@ -1,28 +1,43 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# __author__ = 'gmfork'#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # __author__ = 'gmfork'
 
 import os
 from LogStatus import LogStatus
+from httpApi import httpContainer
 
-KEY={0:keyid1,1:keyid2,
-     2:keyid3,3:keyid4,
-     4:keyid5,5:keyid6,
-     6:keyid7,7:keyid8,
-     8:keyid9,9:keyid0}
-KEYFROM={0:"keyfromname1",1:"keyfromname2",
-         2:"keyfromname3",3:"keyfromname4",
-         4:"keyfromname5",5:"keyfromname6",
-         6:"keyfromname7",7:"keyfromname8",
-         8:"keyfromname9",9:"keyfromname0"}
+#  有道API设置
+KEY={0:key1,1:key1,
+     2:key1,3:key1,
+     4:key1,5:key1,
+     6:key1,7:key1,
+     8:key1,9:key1}
+KEYFROM={0:"KEYFROM",1:"KEYFROM",
+         2:"KEYFROM",3:"KEYFROM",
+         4:"KEYFROM",5:"KEYFROM",
+         6:"KEYFROM",7:"KEYFROM",
+         8:"KEYFROM",9:"KEYFROM"}
 
-LOG=LogStatus()
 
+# 打印初始化
 RED=31
 GREEN=32
 
+LOG=LogStatus()
+
+# HTTP设置
+HTTP_PROXY="http://127.0.0.1:8087"
+HTTPS_PROXY="http://127.0.0.1:8087"
+TIMEOUT=10
+HEADERS={
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Encoding":"gzip, deflate, sdch",
+    "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36"
+}
+HTTPCONTAINER=httpContainer(LOG=LOG,HEADERS=HEADERS,HTTP_PROXY=HTTP_PROXY,HTTPS_PROXY=HTTPS_PROXY,TIMEOUT=TIMEOUT)
+
+
+# 程序基本设置初始化
 ROOT=os.getcwd()
 
 VULDB=ROOT+'/vulDB/'
@@ -30,12 +45,5 @@ VULDB=ROOT+'/vulDB/'
 if not os.path.exists(VULDB):
     os.mkdir(VULDB)
 
-HTTP_PROXY="http://127.0.0.1:8087"
-TIMEOUT=10
-HEADERS={
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Encoding":"gzip, deflate, sdch",
-    "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36"
-}
-
 CVEDB=[cve[:-4] for cve in os.listdir(VULDB)]
+
