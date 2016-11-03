@@ -1,0 +1,2 @@
+# AutoTransferVulnerables
+自动化最新漏洞翻译小工具，通过有道API实现
