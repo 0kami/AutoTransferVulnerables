@@ -29,7 +29,7 @@ class FetchContentSF:
 
     def fetchALL(self,url):
 
-        info = self.fetchInfo(url)
+        info = self._fetchInfo(url)
         info['url']=url
         if info.has_key('CVE') and info['CVE'] not in CVEDB:
             discuss = self._fetchDiscussion(url)
