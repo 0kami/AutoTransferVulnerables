@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # __author__ = 'gmfork'
 
-import requests,re,time
+import re,time,os
 from Config import *
 
 
@@ -16,14 +16,14 @@ class FetchVulInSF:
                     "vendor={vendor}&version={version}&title={title}&CVE={CVE}"
         self.oldurl=[]
         self.flag=False
-        with open(ROOT+"/url.db","a+") as f:
+
+        with open(ROOT+"/url.db","r") as f:
             while 1:
                 buf=f.readline().strip()
                 # print buf
                 if not buf:
                     break
                 self.oldurl.append(buf)
-        # print self.oldurl
 
     def query(self,start,lines=100,date="",vendor="",version="",title="",CVE="",proxy=False):
         '''
@@ -97,6 +97,7 @@ class FetchVulInSF:
             res += temp
             t += 100
         return res
+
     def fetchLine(self,lines,proxy=False):
         start=0
         res=[]
@@ -115,121 +116,3 @@ class FetchVulInSF:
                 start+=100
                 lines-=num
                 res.extend(temp)
-
-class FetchVulInSB:#
-    '''
-    获取www.auscert.org.au上的漏洞列表
-    https://www.auscert.org.au/render.html?it=1&offset=0
-    该网站每页固定数量35
-    '''
-    def __init__(self):
-        self.apiurl="https://www.auscert.org.au/render.html?it=1&offset={offset}"
-        self.oldurl = []
-        self.flag = False
-        with open(ROOT + "/url.db", "a+") as f:
-            while 1:
-                buf = f.readline().strip()
-                if not buf:
-                    break
-                self.oldurl.append(buf)
-    def query(self,offset=0,date="",proxy=False,max=0):
-        if date == "":
-            date = time.strftime("%Y-%m-%d")
-        elif date == "null":
-            date = ""
-        vuls=[]
-        url=self.apiurl.format(offset=offset)
-        try:
-            r = HTTPCONTAINER.get(url, proxy)
-            # print r.content
-            pattern = re.compile(
-                r'<a href="(\./render.html\?it=[0-9]{0,6})" class="genlink"><b>[\s\S]+?\s*\-\s*<span class="nodetext">\(([\s\S]+?)\)</span>')
-            results = pattern.findall(r.content)
-            t=0
-            for result in results:
-                # print result
-                temp_url=result[0].replace('./',"https://www.auscert.org.au/")
-                if temp_url in self.oldurl:
-                    continue
-                if date != "":
-                    if time.strptime(result[1], "%d/%m/%Y") >= time.strptime(date, "%Y-%m-%d") and self.checkAccessible(temp_url,proxy=proxy):
-                        vuls.append(temp_url)
-                    else:
-                        self.flag = True
-                else:
-                    if self.checkAccessible(temp_url, proxy=proxy):
-                        vuls.append(temp_url)
-                    else:
-                        continue
-                    if t==max:
-                        return vuls
-                    else:
-                        t+=1
-            return vuls
-        except:
-            print "获取securityfocus漏洞列表出错"
-            print '=== STEP ERROR INFO START'
-            import traceback
-            traceback.print_exc()
-            print '=== STEP ERROR INFO END'
-            return []
-
-    def fetch(self, date, proxy=False):
-        '''
-        Parameters
-        ----------
-        date  2016-10-29
-
-        Returns vuls list
-        -------
-        '''
-        res = []
-        t = 0
-        num = 0
-        while 1:
-            temp = self.query(t, date=date, proxy=proxy)
-            num += len(temp)
-            LOG.pprint("+", "Total fecth " + str(num), GREEN)
-            if self.flag:
-                res.extend(temp)
-                break
-            res += temp
-            t += 35
-        return res
-
-    def fetchLine(self, lines, proxy=False):
-        start = 0
-        res = []
-        while 1:
-            temp = self.query( offset=start, date="null", proxy=proxy,max=lines)
-            num = len(temp)
-            if num > lines:
-                res.extend(temp[:lines])
-                LOG.pprint("+", "Total fecth " + str(lines), GREEN)
-                return res
-            elif num == lines:  # 获取了足够的url
-                res.extend(temp)
-                LOG.pprint("+", "Total fecth " + str(lines), GREEN)
-                return res
-            else:
-                start += 35
-                lines -= num
-                res.extend(temp)
-
-    def checkAccessible(self,url,proxy=False):
-        r=HTTPCONTAINER.get(url,proxy)
-        if "authorised" in r.content:
-            return False
-        else:
-            return True
-
-if __name__=='__main__':
-    # sf=FetchVulInSF()
-    # temp=sf.fetch("2016-10-29")
-    # temp=sf.fetchLine(10)
-    # print temp
-    # print len(temp)
-    sb=FetchVulInSB()
-    temp=sb.fetchLine(10)
-    print temp
-    print len(temp)

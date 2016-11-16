@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # __author__ = 'gmfork'
 
@@ -13,11 +13,10 @@ def store(vuls):
         for line in vuls:
             f.write(line+"\n")
 
-
-
 def run(res):
     LOG.pprint("+", "start program...",GREEN)
     LOG.pprint("+", "fetching vul list...",GREEN)
+    #获取漏洞列表
     sf = FetchVulInSF()
     vuls=[]
     if res.has_key('num'):
@@ -26,6 +25,7 @@ def run(res):
         vuls=sf.fetch(res['date'], proxy=res['proxy'])
     store(vuls)#储存获取的最新的url
     LOG.pprint("+", "fecthing vul details...",GREEN)
+    #获取对应列表的漏洞详情
     fc = FetchContentSF(vuls, proxy=res['proxy'])
     results = fc.fetch()
     results=[temp for temp in results if temp!=None]
@@ -35,11 +35,13 @@ def run(res):
         sys.exit(0)
     # print results
     LOG.pprint("+", "start transfer...",GREEN)
+    #开始翻译漏洞
     tv = TransferVuls(results)
     res = tv.dealWithSF()
     # print res
     LOG.pprint("+", "transfer done...",GREEN)
     LOG.pprint("+", "output file to " + VULDB,GREEN)
+    #生成文件
     oftt=OutputFileToTxt(res)
     oftt.output()
     LOG.pprint("+", "log CVE db done...",GREEN)

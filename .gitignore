@@ -87,3 +87,9 @@ ENV/
 
 # Rope project settings
 .ropeproject
+api/Config.py
+url.db
+vulList.xls
+vulDB/*.txt
+reTest.py
+test.py

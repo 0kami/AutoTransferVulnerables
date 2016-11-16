@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 # __author__ = 'gmfork'
 
-import re,time,random
+import re,time,random,sys
 
 from FetchVuls import FetchVulInSF
+from Check import Check
 from multiprocessing.pool import ThreadPool
 from Config import *
 
@@ -16,9 +17,26 @@ class FetchContentSF:
         self.vuls=vuls
         self.size=6
         self.proxy=proxy
+        self.check=False
+        self.check=Check()
+        self.load()
+
+    def load(self):
+        error_times=0
+        LOG.pprint('+', 'load cncert cookie', GREEN)
+        while error_times<3:
+            code=self.check.load()
+            if code:
+                break
+            LOG.pprint('-', 'load cncert cookie failed, load again', RED)
+        LOG.pprint('+', 'load cncert cookie success', GREEN)
 
     def setThreadSize(self,size):
         self.size=size
+
+    def setCookie(self,cookie):
+        self.cookie=cookie
+        self.check=True
 
     def fetch(self):
         pool=ThreadPool(self.size)
@@ -31,17 +49,31 @@ class FetchContentSF:
 
         info = self._fetchInfo(url)
         info['url']=url
-        if info.has_key('CVE') and info['CVE'] not in CVEDB:
+        flag=info.has_key('CVE') and 'N-A' not in info['CVE']
+        code=-1000
+        if flag:
+            code=self.check.check(info['CVE'])
+            if code==-1:
+                LOG.pprint('-','无法获取CNCERT cookie，请查看是否可以正常访问网站',RED)
+                sys.exit(0)
+        if flag and info['CVE'] in CVEDB:
+            LOG.pprint("-", "已存在CVE漏洞库中 " + url + ", 不载入，请人工确认", RED)
+        elif flag and code>0:
+            LOG.pprint("-", "已存在CNCERT漏洞库中 " + url + ", 不载入", RED)
+        elif flag and code==0:
             discuss = self._fetchDiscussion(url)
             exploit = self._fetchExploit(url)
             solution = self._fetchSolution(url)
-            references=self._fetchReferences(url)
+            references={'references':url}
             LOG.pprint("+","fetch "+url+" details done",GREEN)
             return dict(dict(dict(dict(info, **discuss), **exploit), **solution),**references)
-        LOG.pprint("-","已存在CVE漏洞库中 "+url+", 不载入，请人工确认",RED)
+        else:
+            LOG.pprint("-", "不存在CVE " + url + ", 不载入，请人工确认", RED)
+
 
     def _fetchInfo(self,url):
         url=url+"/info"
+        HTTPCONTAINER.setHeaders(HEADERS)
         r = HTTPCONTAINER.get(url, self.proxy)
 
         pattern=re.compile(r'\s*<td>\s*<span class="label">([\s\S]+?):</span>\s*</td>\s*<td>\s*([\s\S]*?)\s*</td>')
@@ -64,6 +96,7 @@ class FetchContentSF:
 
     def _fetchReferences(self,url):
         url+="/references"
+        HTTPCONTAINER.setHeaders(HEADERS)
         r = HTTPCONTAINER.get(url, self.proxy)
 
         pattern=re.compile(
@@ -76,6 +109,7 @@ class FetchContentSF:
 
     def _fetchDiscussion(self,url):
         url=url+"/discuss"
+        HTTPCONTAINER.setHeaders(HEADERS)
         r = HTTPCONTAINER.get(url, self.proxy)
         pattern = re.compile(
             r'<div id="vulnerability">\s*<span class="title">([\s\S]*?)</span><br/><br/>\s*([\s\S]*?)\s*</div>')
@@ -87,8 +121,8 @@ class FetchContentSF:
 
     def _fetchExploit(self,url):
         url=url+"/exploit"
+        HTTPCONTAINER.setHeaders(HEADERS)
         r = HTTPCONTAINER.get(url, self.proxy)
-
         pattern = re.compile(
             r'<div id="vulnerability">\s*<span class="title">[\s\S]*?</span><br/><br/>\s*([\s\S]*?)\s*</div>')
         res = pattern.findall(r.content)
@@ -98,6 +132,7 @@ class FetchContentSF:
 
     def _fetchSolution(self,url):
         url=url+"/solution"
+        HTTPCONTAINER.setHeaders(HEADERS)
         r = HTTPCONTAINER.get(url, self.proxy)
 
         pattern = re.compile(
@@ -106,6 +141,8 @@ class FetchContentSF:
         temp = res[0].replace('<br/>', '')
         temp = ' '.join(temp.split())
         return {"solution":temp}
+
+
 
 class FetchContentSB:
     def __init__(self,vuls,proxy):
