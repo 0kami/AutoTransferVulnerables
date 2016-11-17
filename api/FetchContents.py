@@ -8,6 +8,7 @@ from FetchVuls import FetchVulInSF
 from Check import Check
 from multiprocessing.pool import ThreadPool
 from Config import *
+from threading import Lock
 
 class FetchContentSF:
     '''
@@ -20,6 +21,7 @@ class FetchContentSF:
         self.check=False
         self.check=Check()
         self.load()
+        self.lock=Lock()
 
     def load(self):
         error_times=0
@@ -52,7 +54,9 @@ class FetchContentSF:
         flag=info.has_key('CVE') and 'N-A' not in info['CVE']
         code=-1000
         if flag:
-            code=self.check.check(info['CVE'])
+            if self.lock.acquire(1):
+                code=self.check.check(info['CVE'])
+                self.lock.release()
             if code==-1:
                 LOG.pprint('-','无法获取CNCERT cookie，请查看是否可以正常访问网站',RED)
                 sys.exit(0)
@@ -142,30 +146,6 @@ class FetchContentSF:
         temp = ' '.join(temp.split())
         return {"solution":temp}
 
-
-
-class FetchContentSB:
-    def __init__(self,vuls,proxy):
-        self.vuls = vuls
-        self.size = 6
-        self.proxy = proxy
-
-    def fetch(self):
-        try:
-            pool=ThreadPool(self.size)
-            res=pool.map(self.fetchALL,self.vuls)
-            pool.close()
-            pool.join()
-            return res
-        except:
-            print '=== STEP ERROR INFO START'
-            import traceback
-            traceback.print_exc()
-            print '=== STEP ERROR INFO END'
-            return []
-
-    def fetchALL(self,url):
-        pass
 
 if __name__=='__main__':
 

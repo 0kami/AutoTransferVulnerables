@@ -14,13 +14,23 @@ class Check:
 
     def load(self):
         gc = GetCookie()
+        # self.headers = {
+        #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        #     "Accept-Encoding": "gzip, deflate, sdch",
+        #     "Referer": "http://www.cnvd.org.cn/",
+        #     "Upgrade-Insecure-Requests": "1",
+        #     "Content-Type": "application/x-www-form-urlencoded",
+        #     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:49.0) Gecko/20100101 Firefox/49.0",
+        #     "Accept-Language": "zh-CN,zh;q=0.8",
+        #     "Cookie": gc.getCookie().strip()
+        # }
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
             "Accept-Encoding": "gzip, deflate, sdch",
             "Referer": "http://www.cnvd.org.cn/",
             "Upgrade-Insecure-Requests": "1",
             "Content-Type": "application/x-www-form-urlencoded",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:49.0) Gecko/20100101 Firefox/49.0",
+            "User-Agent": gc.getUA().strip(),
             "Accept-Language": "zh-CN,zh;q=0.8",
             "Cookie": gc.getCookie().strip()
         }

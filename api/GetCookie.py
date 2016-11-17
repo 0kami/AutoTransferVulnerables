@@ -21,31 +21,38 @@ class GetCookie:
         self.url="http://www.cnvd.org.cn/"
 
     def getCookie(self):
-        cookie=[]
-        #第一次握手，获取js文件
-        HTTPCONTAINER.setHeaders(self.headers)
-        r=HTTPCONTAINER.get(self.url)
-        #根据js生成cookie
-        content=r.content.replace('\x00','')[8:-10]
-        content=content.replace('eval','')
-        cookie.append(r.headers['Set-Cookie'].split(';')[0])
-        cookie.append(self.calCookie(content).strip())
-        self.headers['Cookie']='; '.join(cookie)
-        #第二次握手，获取剩余的cookie
-        HTTPCONTAINER.setHeaders(self.headers)
-        r=HTTPCONTAINER.get(self.url)
-        temp=r.headers['Set-Cookie'].split(',')
-        for t in temp:
-            if '=' in t.split(';')[0]:
-                cookie.append(t.split(';')[0])
-        return '; '.join(cookie)
-
+        # cookie=[]
+        # #第一次握手，获取js文件
+        # HTTPCONTAINER.setHeaders(self.headers)
+        # r=HTTPCONTAINER.get(self.url)
+        # #根据js生成cookie
+        # content=r.content.replace('\x00','')[8:-10]
+        # content=content.replace('eval','')
+        # print content
+        # cookie.append(r.headers['Set-Cookie'].split(';')[0])
+        # cookie.append(self.calCookie(content).strip())
+        # self.headers['Cookie']='; '.join(cookie)
+        # #第二次握手，获取剩余的cookie
+        # HTTPCONTAINER.setHeaders(self.headers)
+        # r=HTTPCONTAINER.get(self.url)
+        #
+        # temp=r.headers['Set-Cookie'].split(',')
+        # for t in temp:
+        #     if '=' in t.split(';')[0]:
+        #         cookie.append(t.split(';')[0])
+        cookie=raw_input('please input cookie: ')
+        return cookie
+    def getUA(self):
+        return raw_input('please input UA: ')
     def calCookie(self,code):
-        with open(ROOT+'/tmp/temp.txt','w') as f:
-            f.write(code)
-        # print code
-        tmp= os.popen('java -cp '+ROOT+'/api/ CnvdJSLCookie '+ROOT+'/tmp/temp.txt').readlines()
-        return tmp[0]
+        pass
+        # tmp=raw_input('please input ')
+        # with open(ROOT+'/tmp/temp.txt','w') as f:
+        #     f.write(code)
+        # # print code
+        # tmp= os.popen('java -cp '+ROOT+'/api/ CnvdJSLCookie '+ROOT+'/tmp/temp.txt').readlines()
+        # print tmp[0]
+        # return tmp[0]
 
 if __name__=='__main__':
     gc=GetCookie()

@@ -13,10 +13,10 @@ class OutputFileToExcel:
     '''
     将获取到的文件翻译后生成excel
     '''
-    def __init__(self,vuls,orgin):
+    def __init__(self,vuls):
         self.vuls = [vul for vul in vuls if vul]
         self.trans=TransferByYouDao()
-        self.orgin=orgin
+
     def output(self):
         try:
             if self.vuls != []:
