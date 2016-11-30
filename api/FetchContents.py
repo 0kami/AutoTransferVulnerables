@@ -22,6 +22,7 @@ class FetchContentSF:
         self.check=Check()
         self.load()
         self.lock=Lock()
+        self.pool=ThreadPool(self.size)
 
     def load(self):
         error_times=0
@@ -41,10 +42,11 @@ class FetchContentSF:
         self.check=True
 
     def fetch(self):
-        pool=ThreadPool(self.size)
-        res=pool.map(self.fetchALL,self.vuls)
-        pool.close()
-        pool.join()
+
+        res=self.pool.map(self.fetchALL,self.vuls)
+        self.pool.close()
+        self.pool.join()
+
         return res
 
     def fetchALL(self,url):
@@ -59,21 +61,27 @@ class FetchContentSF:
                 self.lock.release()
             if code==-1:
                 LOG.pprint('-','无法获取CNCERT cookie，请查看是否可以正常访问网站',RED)
+                self.pool.terminate()
                 sys.exit(0)
-        if flag and info['CVE'] in CVEDB:
-            LOG.pprint("-", "已存在CVE漏洞库中 " + url + ", 不载入，请人工确认", RED)
-        elif flag and code>0:
-            LOG.pprint("-", "已存在CNCERT漏洞库中 " + url + ", 不载入", RED)
-        elif flag and code==0:
-            discuss = self._fetchDiscussion(url)
-            exploit = self._fetchExploit(url)
-            solution = self._fetchSolution(url)
-            references={'references':url}
-            LOG.pprint("+","fetch "+url+" details done",GREEN)
-            return dict(dict(dict(dict(info, **discuss), **exploit), **solution),**references)
-        else:
-            LOG.pprint("-", "不存在CVE " + url + ", 不载入，请人工确认", RED)
-
+        try:
+            if flag and info['CVE'] in CVEDB:
+                LOG.pprint("-", "已存在CVE漏洞库中 " + url + ", 不载入，请人工确认", RED)
+            elif flag and code>0:
+                LOG.pprint("-", "已存在CNCERT漏洞库中 " + url + ", 不载入", RED)
+            elif flag and code==0:
+                discuss = self._fetchDiscussion(url)
+                exploit = self._fetchExploit(url)
+                solution = self._fetchSolution(url)
+                company=self._fetchReferences(url)
+                references={'references':url}
+                LOG.pprint("+","fetch "+url+" details done",GREEN)
+                return dict(dict(dict(dict(dict(info, **discuss), **exploit), **solution),**references),**company)
+            else:
+                LOG.pprint("-", "不存在CVE " + url + ", 不载入，请人工确认", RED)
+        except KeyboardInterrupt:
+            LOG.pprint('+','user stop',GREEN)
+            self.pool.terminate()
+            sys.exit(0)
 
     def _fetchInfo(self,url):
         url=url+"/info"
@@ -93,23 +101,43 @@ class FetchContentSF:
                 res['Vulnerable']='\t'.join(line[1].split('\t'))
                 res['Vulnerable'] = '\n'.join(res['Vulnerable'].split('\n'))
                 res['Vulnerable']=(' '.join(res['Vulnerable'].split())).replace('<br/>','\n')
+                res['Vulnerable']=re.sub('<[^<]+?>', '', res['Vulnerable'])
+                pattern = re.compile(
+                    r'\s*([\S\s]+?)\s[0-9]{1}[\s\S]*?\n')
+                product=list(set(pattern.findall(res['Vulnerable'])))
+                res['product']="##".join(product).replace('+','').strip()
                 # print res['Vulnerable']
             else:
                 res[line[0]]=re.sub('<[^<]+?>', '', line[1])
         return res
 
     def _fetchReferences(self,url):
+        '''
+        获取解决方案中的url
+        获取厂商名
+        :param url:
+        :return:
+        '''
         url+="/references"
         HTTPCONTAINER.setHeaders(HEADERS)
         r = HTTPCONTAINER.get(url, self.proxy)
-
+        content=r.content[r.content.index('<li class="here"><a href='):]
+        #正则匹配
         pattern=re.compile(
-            r'<li><a href="([\s\S]+?)">')
-        results=pattern.findall(r.content)
-        # print results
-        res=[result for result in results if '/bid/' not in result]
-        # print res
-        return {'references':"\n".join(res)}
+            r'<li><a href="([\s\S]+?)">([\s\S]+?)</a>\s*\([\s\S]+?\)\s*<br/></li>')
+        results=pattern.findall(content)
+        data={"company":"","solutionUrl":"","companyUrl":""}
+        max=0
+        for result in results:
+            if "Homepage" in result[1] or "Home Page" in result[1]:
+                data['company']=result[1].strip("Homepage").strip("Home Page").strip()
+                data['companyUrl']=result[0]
+            else:
+                if max < len(result[1].strip()):
+                    data['solutionUrl']=result[0]
+                    max=len(result[1].strip())
+
+        return data
 
     def _fetchDiscussion(self,url):
         url=url+"/discuss"
@@ -144,8 +172,9 @@ class FetchContentSF:
         res = pattern.findall(r.content)
         temp = res[0].replace('<br/>', '')
         temp = ' '.join(temp.split())
+        if "":
+            pass
         return {"solution":temp}
-
 
 if __name__=='__main__':
 

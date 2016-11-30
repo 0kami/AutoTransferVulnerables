@@ -65,7 +65,7 @@ class App:
         LOG.pprint("+", "log CVE db done...", GREEN)
         LOG.pprint("+", "output vul excel...", GREEN)
         test = OutputFileToExcel(results)
-        test.output()
+        test.outfileNew()
 
     def store(self,vuls):
         with open("./url.db", 'a+') as f:

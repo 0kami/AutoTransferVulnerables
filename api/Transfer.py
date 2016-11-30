@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # __author__ = 'gmfork'
 
-import requests,json,random,re
+import json,random,re
 from Config import *
 from multiprocessing.pool import ThreadPool
 
@@ -49,7 +49,7 @@ class TransferByYouDao:
                 return self.transfer(query)
             else:
                 data = json.loads(r.content)
-                if data['errorCode']==0:
+                if data['errorCode']==0 and data.has_key('translation'):
                     return {"errorcode":data['errorCode'],
                             "translation":data['translation'][0],
                             "query":data['query']}
@@ -96,11 +96,20 @@ class TransferVuls:
             print '=== STEP ERROR INFO END'
 
     def transfer(self,line):
+        line['title']=re.sub('CVE\-[0-9]{1,6}\-[0-9]{1,6}', '', line['title'])
         line['ch_title']=self.trans.transfer(line['title'])['translation']
         line['ch_Class']=self.trans.transfer(line['Class'])['translation']
         line['ch_discuss']=self.doTrans(line['discuss'])
         line['ch_exploit']=self.doTrans(line['exploit'])
-        line['ch_solution']=self.doTrans(line['solution'])
+        if "not aware of" in line['exploit']:
+            line['isexploit']="否"
+        else:
+            line['isexploit']='是'
+        #解决方案套用模版
+        if "Updates are available" in line['solution']:
+            line['ch_solution']="厂商已发布了漏洞修复程序，请及时关注更新："+line['solutionUrl']
+        elif "not aware of" in line['solution']:
+            line['ch_solution']="厂商尚未提供漏洞修复方案，请关注厂商主页更新："+line['companyUrl']
         # print line
         return line
 

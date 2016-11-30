@@ -57,6 +57,7 @@ class httpContainer:
             return r
         except KeyboardInterrupt:
             self.LOG.pprint('+','stop by user',32)
+
             sys.exit(0)
         except:
             self.LOG.pprint("-", "http error, get " + url + " again", 31)
