@@ -48,6 +48,11 @@ class Check:
                 error_times+=1
             else:
                 pattern=re.compile(r'<span>共\&nbsp\;([0-9]*)\&nbsp\;条\s*</span>')
-                check=pattern.findall(r.content)[0]
-                return int(check)
+                try:
+                    check=pattern.findall(r.content)[0]
+                    return int(check)
+                except:
+                    if u'对不起，没有找到相关的漏洞' in r.content:
+                        return 0
+
         return 0
